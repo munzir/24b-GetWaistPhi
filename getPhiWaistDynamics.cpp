@@ -47,7 +47,7 @@ int genPhiMatrixAsFile() {
 /*============================================================================================*/
 /*====================================Read in text files======================================*/
 /*============================================================================================*/
-	string inputQFilename = "../../24-ParametricIdentification-Waist/simOutData/qWaistData.txt";
+    string inputQFilename = "../../24-ParametricIdentification-Waist/simOutData/qWaistData.txt";
     string inputQdotFilename = "../../24-ParametricIdentification-Waist/simOutData/dqWaistData.txt";
     string inputQdotdotFilename = "../../24-ParametricIdentification-Waist/simOutData/ddqWaistData.txt";
     string inputTorqueFilename = "../../24-ParametricIdentification-Waist/simOutData/torqueWaistData.txt";
@@ -103,7 +103,7 @@ int genPhiMatrixAsFile() {
     int numBodies = idealRobot->getNumBodyNodes(); //returns 18
     dart::dynamics::BodyNodePtr bodyi;
     string namei;
-    //These are our 10 parameters, + 3 variables xi, yi, zi
+    // These are our 10 parameters, + 3 variables xi, yi, zi
 	double mi;
     double xi, xMi;
     double yi, yMi;
@@ -113,7 +113,7 @@ int genPhiMatrixAsFile() {
     int numBetaVals = (numBodies-1)*bodyParams;
     Eigen::MatrixXd betaParams(1, numBetaVals);
 
-	//Fill betaParams array with values from URDF (masses, inertias) 
+	// Fill betaParams array with values from URDF (masses, inertias) 
     for (int i = 1; i < numBodies; i++) {
         bodyi = idealRobot->getBodyNode(i);
 
@@ -135,11 +135,10 @@ int genPhiMatrixAsFile() {
         betaParams(0, (i-1) * bodyParams + 8) = ixz;
         betaParams(0, (i-1) * bodyParams + 9) = iyz; 
     }
-    // cout << betaParams << endl;
 
     cout << "|-> Done\n";
 
-    //Save beta parameters
+    // Save beta parameters
     ofstream betafile;
     betafile.open ("betaparameters.txt");
     betafile<< betaParams.transpose()<<endl;
@@ -150,7 +149,7 @@ int genPhiMatrixAsFile() {
 /*============================================================================================*/
 
     cout << "Creating robot array ...\n";
-	//load robots into fwdPertRobotArray and revPertRobotArray
+	// Load robots into fwdPertRobotArray and revPertRobotArray
     dart::dynamics::SkeletonPtr fwdPertRobotArray[numBetaVals];
     dart::dynamics::SkeletonPtr revPertRobotArray[numBetaVals];
     for(int i=0; i<numBetaVals; i++) {
@@ -158,21 +157,21 @@ int genPhiMatrixAsFile() {
         revPertRobotArray[i] = idealRobot->clone();
     }
 
-    //Perturb all Beta values in the forward direction
+    // Perturb all Beta values in the forward direction
     for(int i=1; i<numBodies; i++) { //for 17 loops
-	    fwdPertRobotArray[(i-1)*bodyParams + 0]->getBodyNode(i)->setMass(mi + perturbedValue);
-	    fwdPertRobotArray[(i-1)*bodyParams + 1]->getBodyNode(i)->setLocalCOM(Eigen::Vector3d(xi + perturbedValue, yi, zi));
-	    fwdPertRobotArray[(i-1)*bodyParams + 2]->getBodyNode(i)->setLocalCOM(Eigen::Vector3d(xi, yi + perturbedValue, zi));
-	    fwdPertRobotArray[(i-1)*bodyParams + 3]->getBodyNode(i)->setLocalCOM(Eigen::Vector3d(xi, yi, zi + perturbedValue));
-	    fwdPertRobotArray[(i-1)*bodyParams + 4]->getBodyNode(i)->setMomentOfInertia(ixx + perturbedValue, iyy, izz, ixy, ixz, iyz);
-	    fwdPertRobotArray[(i-1)*bodyParams + 5]->getBodyNode(i)->setMomentOfInertia(ixx, iyy + perturbedValue, izz, ixy, ixz, iyz);
-	    fwdPertRobotArray[(i-1)*bodyParams + 6]->getBodyNode(i)->setMomentOfInertia(ixx, iyy, izz + perturbedValue, ixy, ixz, iyz);
-	    fwdPertRobotArray[(i-1)*bodyParams + 7]->getBodyNode(i)->setMomentOfInertia(ixx, iyy, izz, ixy + perturbedValue, ixz, iyz);
-	    fwdPertRobotArray[(i-1)*bodyParams + 8]->getBodyNode(i)->setMomentOfInertia(ixx, iyy, izz, ixy, ixz + perturbedValue, iyz);
-	    fwdPertRobotArray[(i-1)*bodyParams + 9]->getBodyNode(i)->setMomentOfInertia(ixx, iyy, izz, ixy, ixz, iyz + perturbedValue);  
-	}
+        fwdPertRobotArray[(i-1)*bodyParams + 0]->getBodyNode(i)->setMass(mi + perturbedValue);
+        fwdPertRobotArray[(i-1)*bodyParams + 1]->getBodyNode(i)->setLocalCOM(Eigen::Vector3d(xi + perturbedValue, yi, zi));
+        fwdPertRobotArray[(i-1)*bodyParams + 2]->getBodyNode(i)->setLocalCOM(Eigen::Vector3d(xi, yi + perturbedValue, zi));
+        fwdPertRobotArray[(i-1)*bodyParams + 3]->getBodyNode(i)->setLocalCOM(Eigen::Vector3d(xi, yi, zi + perturbedValue));
+        fwdPertRobotArray[(i-1)*bodyParams + 4]->getBodyNode(i)->setMomentOfInertia(ixx + perturbedValue, iyy, izz, ixy, ixz, iyz);
+        fwdPertRobotArray[(i-1)*bodyParams + 5]->getBodyNode(i)->setMomentOfInertia(ixx, iyy + perturbedValue, izz, ixy, ixz, iyz);
+        fwdPertRobotArray[(i-1)*bodyParams + 6]->getBodyNode(i)->setMomentOfInertia(ixx, iyy, izz + perturbedValue, ixy, ixz, iyz);
+        fwdPertRobotArray[(i-1)*bodyParams + 7]->getBodyNode(i)->setMomentOfInertia(ixx, iyy, izz, ixy + perturbedValue, ixz, iyz);
+        fwdPertRobotArray[(i-1)*bodyParams + 8]->getBodyNode(i)->setMomentOfInertia(ixx, iyy, izz, ixy, ixz + perturbedValue, iyz);
+        fwdPertRobotArray[(i-1)*bodyParams + 9]->getBodyNode(i)->setMomentOfInertia(ixx, iyy, izz, ixy, ixz, iyz + perturbedValue);  
+    }
 
-	//Perturb all Beta values in the reverse direction
+	// Perturb all Beta values in the reverse direction
     for(int i=1; i<numBodies; i++) {
         revPertRobotArray[(i-1)*bodyParams + 0]->getBodyNode(i)->setMass(mi - perturbedValue);
         revPertRobotArray[(i-1)*bodyParams + 1]->getBodyNode(i)->setLocalCOM(Eigen::Vector3d(xi -  perturbedValue, yi, zi));
@@ -201,14 +200,9 @@ int genPhiMatrixAsFile() {
     phibetaRHS.open ("../../24-ParametricIdentification-Waist/phiData/phibeta-RHS");
     phibetaRHS<< "phibeta-RHS" << endl;
 
-    // ofstream RHSperturb;
-    // RHSperturb.open ("RHS_perturb.txt");
-    // RHSperturb<< "RHS_perturb" << endl;
-
     ofstream phifile;
     phifile.open ("../../24-ParametricIdentification-Waist/phiData/phi.txt");
 
-    // Eigen::MatrixXd phi_Mat(numDataPts*(17), numBetaVals);
     Eigen::MatrixXd phiMatrix(numBodies-1, numBetaVals);
     Eigen::MatrixXd phi(numBodies-1,1);
 	
@@ -264,15 +258,13 @@ int genPhiMatrixAsFile() {
 		phibetaRHS<< "RHS, phi*beta, difference at "<< i << endl << endl << rhs_phibeta_diff << endl << endl;
 		phibetaRHS<< "=========================================================================" << endl << endl << endl << endl;
 		phifile<< phiMatrix.block<1,170>(0,0) << endl << endl << endl;
-		// RHSperturb<<"PHI_MAT AT:" << i << endl << endl;
-		// RHSperturb<< phiMatrix << endl;
 	}
 	dataTorque.close();
 	phibetaRHS.close();
-	// RHSperturb.close();
 	phifile.close();
 }
 
+// Read in files
 Eigen::MatrixXd readInputFileAsMatrix(string inputFilename) {
     ifstream infile;
     infile.open(inputFilename);
