@@ -47,12 +47,12 @@ int genPhiMatrixAsFile() {
 /*============================================================================================*/
 /*====================================Read in text files======================================*/
 /*============================================================================================*/
-	string inputQFilename = "../../data/qWaistData.txt";
-    string inputQdotFilename = "../../data/dqWaistData.txt";
-    string inputQdotdotFilename = "../../data/ddqWaistData.txt";
-    string inputTorqueFilename = "../../data/torqueWaistData.txt";
-    string inputMassMatrixFilename = "../../data/mWaistData.txt";
-    string inputCgFilename = "../../data/cgWaistData.txt";
+	string inputQFilename = "../../24-ParametricIdentification-Waist/simOutData/qWaistData.txt";
+    string inputQdotFilename = "../../24-ParametricIdentification-Waist/simOutData/dqWaistData.txt";
+    string inputQdotdotFilename = "../../24-ParametricIdentification-Waist/simOutData/ddqWaistData.txt";
+    string inputTorqueFilename = "../../24-ParametricIdentification-Waist/simOutData/torqueWaistData.txt";
+    string inputMassMatrixFilename = "../../24-ParametricIdentification-Waist/simOutData/mWaistData.txt";
+    string inputCgFilename = "../../24-ParametricIdentification-Waist/simOutData/cgWaistData.txt";
 
     try{
         cout << "Reading input q ...\n";
@@ -92,7 +92,7 @@ int genPhiMatrixAsFile() {
     // Instantiate "ideal" robot
     cout << "Creating ideal beta vector ...\n";
     dart::utils::DartLoader loader;
-    dart::dynamics::SkeletonPtr idealRobot = loader.parseSkeleton("/home/munzir/dart_test/09-URDF/KrangWaist/krang_fixed_base.urdf");
+    dart::dynamics::SkeletonPtr idealRobot = loader.parseSkeleton("/home/krang/dart/09-URDF/KrangWaist/krang_fixed_base.urdf");
     idealRobot->setGravity(Eigen::Vector3d (0.0, -9.81, 0.0));
     
     // Get ideal beta
@@ -194,11 +194,11 @@ int genPhiMatrixAsFile() {
     cout << "Calculating Phi Matrix ...\n";
 
     ofstream dataTorque;
-    dataTorque.open ("dataTorque_RHS.txt");
+    dataTorque.open ("../../24-ParametricIdentification-Waist/phiData/dataTorque_RHS.txt");
     dataTorque<< "dataTorque" << endl;
 
     ofstream phibetaRHS;
-    phibetaRHS.open ("phibeta-RHS");
+    phibetaRHS.open ("../../24-ParametricIdentification-Waist/phiData/phibeta-RHS");
     phibetaRHS<< "phibeta-RHS" << endl;
 
     // ofstream RHSperturb;
@@ -206,7 +206,7 @@ int genPhiMatrixAsFile() {
     // RHSperturb<< "RHS_perturb" << endl;
 
     ofstream phifile;
-    phifile.open ("phi.txt");
+    phifile.open ("../../24-ParametricIdentification-Waist/phiData/phi.txt");
 
     // Eigen::MatrixXd phi_Mat(numDataPts*(17), numBetaVals);
     Eigen::MatrixXd phiMatrix(numBodies-1, numBetaVals);
