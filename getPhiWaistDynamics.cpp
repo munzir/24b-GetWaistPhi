@@ -2,10 +2,10 @@
 
 // genPhiMatrixAsFile
 // Purpose: Determine phi vectors for each input pose
-//   This phi will be used for finding beta (weights of actual robot) via gradient descent or some other method
+// This phi will be used for finding beta (weights of actual robot) via gradient descent or some other method
 //
 // Input: Ideal beta={mi, MXi, MYi, ...}, krang urdf model, perturbation value,
-//   potentially unbalanced data points (q/poses) as a file,
+// potentially unbalanced data points (q/poses) as a file
 // Output: Phi matrix as a file
 
 // Overall Input: Poses in {heading, qBase, etc.} format
@@ -104,7 +104,7 @@ int genPhiMatrixAsFile() {
     dart::dynamics::BodyNodePtr bodyi;
     string namei;
     // These are our 10 parameters, + 3 variables xi, yi, zi
-	double mi;
+    double mi;
     double xi, xMi;
     double yi, yMi;
     double zi, zMi;
@@ -144,12 +144,35 @@ int genPhiMatrixAsFile() {
     betafile<< betaParams.transpose()<<endl;
     betafile.close();
 
+// Rotor Gear Ratios
+Eigen::VectorXd G_R(17);
+
+G_R(0)=596*2;   // Waist Motors 1 and 2
+G_R(1)=596;     //Torso
+G_R(2)=0;       // Kinect N/A
+
+G_R(3)=596;       // Left Arm
+G_R(4)=596;
+G_R(5)=625;
+G_R(6)=625;
+G_R(7)=552;
+G_R(8)=552;
+G_R(9)=552;
+
+G_R(10)=596;    //Right Arm
+G_R(11)=596;
+G_R(12)=625;
+G_R(13)=625;
+G_R(14)=552;
+G_R(15)=552;
+G_R(16)=552;
+
 /*============================================================================================*/
 /*====================================Load array of Robot=====================================*/
 /*============================================================================================*/
 
     cout << "Creating robot array ...\n";
-	// Load robots into fwdPertRobotArray and revPertRobotArray
+    // Load robots into fwdPertRobotArray and revPertRobotArray
     dart::dynamics::SkeletonPtr fwdPertRobotArray[numBetaVals];
     dart::dynamics::SkeletonPtr revPertRobotArray[numBetaVals];
     for(int i=0; i<numBetaVals; i++) {
@@ -206,9 +229,9 @@ int genPhiMatrixAsFile() {
     Eigen::MatrixXd phiMatrix(numBodies-1, numBetaVals);
     Eigen::MatrixXd phi(numBodies-1,1);
 	
-	for (int i = 0; i < numDataPts; i++) { //for each data point
-		// Set idealRobot to compare torques with phi*beta calculation
-		idealRobot->setPositions(allInitq.row(i));
+    for (int i = 0; i < numDataPts; i++) { //for each data point
+        // Set idealRobot to compare torques with phi*beta calculation
+        idealRobot->setPositions(allInitq.row(i));
         idealRobot->setVelocities(allInitqdot.row(i));
         Eigen::VectorXd ddq = allInitqdotdot.row(i);
         Eigen::MatrixXd M = idealRobot->getMassMatrix(); // n x n
@@ -220,14 +243,13 @@ int genPhiMatrixAsFile() {
         // For each Robot (each one has one perturbed value)
         for (int k = 0; k < numBetaVals; k++) { //for 170 loops
 
-			// Set foward perturbed Robot
+            // Set foward perturbed Robot
             fwdPertRobotArray[k]->setPositions(allInitq.row(i));
             fwdPertRobotArray[k]->setVelocities(allInitqdot.row(i));
             Eigen::MatrixXd M_pertfwd = fwdPertRobotArray[k]->getMassMatrix(); // n x n
             Eigen::VectorXd C_pertfwd = fwdPertRobotArray[k]->getCoriolisForces(); // n x 1
             Eigen::VectorXd G_pertfwd = fwdPertRobotArray[k]->getGravityForces(); // n x 1
             Eigen::VectorXd RHS_pertfwd = M_pertfwd*ddq + C_pertfwd + G_pertfwd; //}
-
             // Set reverse perturbed Robot
             revPertRobotArray[k]->setPositions(allInitq.row(i));
             revPertRobotArray[k]->setVelocities(allInitqdot.row(i));
@@ -242,26 +264,26 @@ int genPhiMatrixAsFile() {
             phiMatrix.col(k) = phi;
         }
 
-		// Fix phi
-		for(int b=1; b<numBodies; b++) { //for 17 loops
-			int c = bodyParams*(b-1); //0 10 20 ... 170
-			double m = idealRobot->getBodyNode(b)->getMass();
-			Eigen::Vector3d COM = idealRobot->getBodyNode(b)->getLocalCOM();
+        // Fix phi
+        for(int b=1; b<numBodies; b++) { //for 17 loops
+            int c = bodyParams*(b-1); //0 10 20 ... 170
+            double m = idealRobot->getBodyNode(b)->getMass();
+            Eigen::Vector3d COM = idealRobot->getBodyNode(b)->getLocalCOM();
 
-			phiMatrix.block<17,3>(0,c+1) = phiMatrix.block<17,3>(0,c+1)/m;
+            phiMatrix.block<17,3>(0,c+1) = phiMatrix.block<17,3>(0,c+1)/m;
             phiMatrix.col(c) = phiMatrix.col(c) - phiMatrix.col(c+1)*COM(0) - phiMatrix.col(c+2)*COM(1) - phiMatrix.col(c+3)*COM(2);
-		}
+        }
 	
-		Eigen::MatrixXd rhs_phibeta_diff(17,3);
-		rhs_phibeta_diff <<  RHS_ideal, (phiMatrix*betaParams.transpose()), ((phiMatrix*betaParams.transpose()) - RHS_ideal);
+        Eigen::MatrixXd rhs_phibeta_diff(17,3);
+        rhs_phibeta_diff <<  RHS_ideal, (phiMatrix*betaParams.transpose()), ((phiMatrix*betaParams.transpose()) - RHS_ideal);
 		
-		phibetaRHS<< "RHS, phi*beta, difference at "<< i << endl << endl << rhs_phibeta_diff << endl << endl;
-		phibetaRHS<< "=========================================================================" << endl << endl << endl << endl;
-		phifile<< phiMatrix.block<1,170>(0,0) << endl << endl << endl;
-	}
-	dataTorque.close();
-	phibetaRHS.close();
-	phifile.close();
+        phibetaRHS<< "RHS, phi*beta, difference at "<< i << endl << endl << rhs_phibeta_diff << endl << endl;
+        phibetaRHS<< "=========================================================================" << endl << endl << endl << endl;
+        phifile<< phiMatrix.block<1,170>(0,0) << endl << endl << endl;
+    }
+    dataTorque.close();
+    phibetaRHS.close();
+    phifile.close();
 }
 
 // Read in files
