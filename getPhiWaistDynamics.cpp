@@ -288,14 +288,13 @@ int genPhiMatrixAsFile() {
             viscous_mat(j,j) =  allInitqdot.row(i)(j);
             coulomb_mat(j,j) = sin(allInitqdot.row(i)(j));
         }
-
-        cout << i << " " << viscous_mat << endl;
 	
         Eigen::MatrixXd rhs_phibeta_diff(17,3);
         rhs_phibeta_diff <<  RHS_ideal, (phiMatrix*betaParams.transpose()), ((phiMatrix*betaParams.transpose()) - RHS_ideal);
 		
         phibetaRHS<< "RHS, phi*beta, difference at "<< i << endl << endl << rhs_phibeta_diff << endl << endl;
         phibetaRHS<< "=========================================================================" << endl << endl << endl << endl;
+        //Only inserting first row of phi matrix into phifile since rest are zeros
         phifile<< phiMatrix.block<1,170>(0,0) << endl << endl << endl;
 		
 		for(int j=0; j<17; j++){
@@ -311,6 +310,11 @@ int genPhiMatrixAsFile() {
     phibetaRHS.close();
     phifile.close();
     phifile_comp.close();
+
+    cout << "Size of phi:" << endl;
+    cout << phiMatrix.rows() << "x" << phiMatrix.cols() << endl;
+    cout << "Size of phi_comp:" << endl;
+    cout << phiMatrix_comp.rows() << "x" << phiMatrix_comp.cols() << endl;
 }
 
 // Read in files
