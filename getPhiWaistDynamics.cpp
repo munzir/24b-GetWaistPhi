@@ -146,26 +146,27 @@ int genPhiMatrixAsFile() {
 
 // Rotor Gear Ratios
 Eigen::VectorXd G_R(17);
+Eigen::VectorXd km(17);
 
-G_R(0)=596*2;   // Waist Motors 1 and 2
-G_R(1)=596;     //Torso
-G_R(2)=0;       // Kinect N/A
+G_R(0)=596*2;   km(0) = 31.4e-3*2;	// Waist Motors 1 and 2
+G_R(1)=596;     km(1) = 31.4e-3;	//Torso
+G_R(2)=0;       km(2) = 0;			// Kinect N/A
 
-G_R(3)=596;       // Left Arm
-G_R(4)=596;
-G_R(5)=625;
-G_R(6)=625;
-G_R(7)=552;
-G_R(8)=552;
-G_R(9)=552;
+G_R(3)=596;		km(3) = 31.4e-3;	// Left Arm
+G_R(4)=596;		km(4) = 31.4e-3;
+G_R(5)=625;		km(5) = 38e-3;
+G_R(6)=625;		km(6) = 38e-3;
+G_R(7)=552;		km(7) = 16e-3;
+G_R(8)=552;		km(8) = 16e-3;
+G_R(9)=552;		km(9) = 16e-3;
 
-G_R(10)=596;    //Right Arm
-G_R(11)=596;
-G_R(12)=625;
-G_R(13)=625;
-G_R(14)=552;
-G_R(15)=552;
-G_R(16)=552;
+G_R(10)=596;    km(10) = 31.4e-3;	//Right Arm
+G_R(11)=596;	km(11) = 31.4e-3;
+G_R(12)=625;	km(12) = 38e-3;
+G_R(13)=625;	km(13) = 38e-3;
+G_R(14)=552;	km(14) = 16e-3;
+G_R(15)=552;	km(15) = 16e-3;
+G_R(16)=552;	km(16) = 16e-3;
 
 /*============================================================================================*/
 /*====================================Load array of Robot=====================================*/
@@ -227,7 +228,22 @@ G_R(16)=552;
     phifile.open ("../../24-ParametricIdentification-Waist/phiData/phi.txt");
 
     Eigen::MatrixXd phiMatrix(numBodies-1, numBetaVals);
+	Eigen::MatrixXd phiMatrix_comp(numBodies-1,numBetaVals+17*3); 
     Eigen::MatrixXd phi(numBodies-1,1);
+	
+	Eigen::MatrixXd gear_mat = Eigen::MatrixXd::Zero(17,17);
+	Eigen::MatrixXd viscous_mat = Eigen::MatrixXd::Zero(17,17);
+	
+	//******************************************************
+	Eigen:MatrixXd coulomb_mat = Eigen::MatrixXd::Zero(17,17);
+
+	for (int j=0;j<17;j++){
+		gear_mat(j,j)    =  G_R(j)*G_R(j)*ddq(j);
+		viscous_mat(j,j) =  allInitqdot.row(i)(j);
+		columb_mat(j,j)  = sin(allInitqdot.row(i)(j));
+	}
+	
+	//******************************************************
 	
     for (int i = 0; i < numDataPts; i++) { //for each data point
         // Set idealRobot to compare torques with phi*beta calculation
@@ -280,11 +296,21 @@ G_R(16)=552;
         phibetaRHS<< "RHS, phi*beta, difference at "<< i << endl << endl << rhs_phibeta_diff << endl << endl;
         phibetaRHS<< "=========================================================================" << endl << endl << endl << endl;
         phifile<< phiMatrix.block<1,170>(0,0) << endl << endl << endl;
+		
+		for(int i=0; i<17; i++){
+			phiMatrix_comp<17,10>(0,i*13) = phiMatrix.block(17,10)(0,i*10);
+			phiMatrix_comp.col(13*(i+1) - 3) = gear_mat.col(i);
+			phiMatrix_comp.col(13*(i+1) - 2) = viscous_mat.col(i);
+			phiMatrix_comp.col(13*(i+1) - 1) = coulomb_mat.col(i);
+		}
     }
     dataTorque.close();
     phibetaRHS.close();
     phifile.close();
 }
+
+cout << endl << phiMatrix_comp.rows() << endl << endl;
+cout << endl << phiMatrix_comp.cols() << endl << endl;
 
 // Read in files
 Eigen::MatrixXd readInputFileAsMatrix(string inputFilename) {
